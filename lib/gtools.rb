@@ -1,45 +1,84 @@
+##
+# GTools
+# Copyright (c) 2013 Kamil Kocemba <kkocemba@gmail.com>
+#
+
 require "gtools/version"
 require 'httparty'
 
 module GTools
 
+  ##
+  # Returns Google Page Rank for specified domain
+  #
+  # <tt>Note: mining Page Rank violates Google ToS.</tt>
+  #
   def self.page_rank(domain)
     url = GToolsConfiguration.tbr_host + GToolsConfiguration.tbr_query % [GMath.hash(domain), domain]
     r = HTTParty.get(url).parsed_response
     (r =~ /(\d+)$/) ? Integer($1) : nil
   end
 
+  ##
+  # Returns a dictionary of Google pagespeed analysis results for specified URL.
+  # 
+  # Notable fields: <tt>rule_results</tt>, <tt>score</tt>
+  #
   def self.pagespeed_analysis(url)
-    nil unless url
+    return nil unless valid_url url
     url = GToolsConfiguration.google_pagespeed_url % [URI.encode(url)]
     HTTParty.get(url).parsed_response["results"]
   end
 
+  ##
+  # Returns pagespeed score for specified URL.
+  # 
   def self.pagespeed_score(url)
-    nil unless url && URI.parse(url)
+    return nil unless valid_url url
     r = pagespeed_analysis(url)
     r ? r["score"] : nil
   end
 
-  def self.site_index(url)
-    nil unless url && URI.parse(url)
-    search_results "site:#{url}"
+  ##
+  # Returns estimated number of indexed pages for specified domain.
+  #
+  # <tt>Provide user_ip param to avoid ToS violation.</tt>
+  #
+  def self.site_index(url, user_ip = nil)
+    return nil unless valid_url url
+    search_results "site:#{url}", user_ip
   end
 
-  def self.site_links(url)
-    nil unless url && URI.parse(url)
-    search_results "link:#{url}"
+  ##
+  #
+  # Returns a number of results for link:domain query.
+  # This gives an overview of backlink portfolio.
+  #
+  # <tt>Note: this method is not intended to be used for accurate backlink analysis.</tt>
+  # 
+  def self.site_links(url, user_ip = nil)
+    return nil unless valid_url url
+    search_results "link:#{url}", user_ip
   end
 
-  def self.search_results(query)
-    nil unless query
+  ##
+  # Returns estimated number of results for specified search query.
+  #
+  # <tt>Provide user_ip param to avoid ToS violation.</tt>
+  #
+  def self.search_results(query, user_ip = nil)
+    return nil unless query
     url = GToolsConfiguration.google_apisearch_url % [1, URI.encode(query)]
+    url += "&userip=#{user_ip}" if user_ip
     r = HTTParty.get(url).parsed_response
     return nil unless r['responseData']
     count = r['responseData']['cursor']['estimatedResultCount']
     count ? Integer(count) : nil
   end
 
+  ##
+  # Returns Google tld suggestion based on current IP.
+  #
   def self.suggested_tld
     url = GToolsConfiguration.google_tld_url
     domain = HTTParty.get(url).parsed_response
@@ -47,12 +86,20 @@ module GTools
   end
 
   private
-  module GToolsConfiguration
+  def self.valid_url(url) # :nodoc:
+    false unless url
+    url += 'http://' unless url =~ /http:\/\//
+    !!(URI.parse(url) && url =~ URI::regexp)
+  rescue URI::InvalidURIError
+    false 
+  end
+
+  private
+  module GToolsConfiguration # :nodoc:
 
     class << self; 
       attr_accessor :google_apisearch_url, :google_pagespeed_url, :google_plusone_url, :google_tld_url, :tbr_host, :tbr_query; 
     end
-
     self.google_apisearch_url = "http://ajax.googleapis.com/ajax/services/search/web?v=1.0&rsz=%s&q=%s"
     self.google_pagespeed_url = "https://developers.google.com/_apps/pagespeed/run_pagespeed?url=%s&format=json"
     self.google_plusone_url = "https://plusone.google.com/u/0/_/+1/fastbutton?count=true&url=%s"
@@ -63,7 +110,7 @@ module GTools
   end
 
   private
-  module GMath
+  module GMath # :nodoc:
 
     class << self; attr_accessor :hash_seed; end
 

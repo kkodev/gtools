@@ -1,8 +1,11 @@
+##
+# GTools
+# Copyright (c) 2013 Kamil Kocemba <kkocemba@gmail.com>
+#
+
 require 'spec_helper'
 
 describe GTools do
-
-  sleep_amount = 1
 
   describe :page_rank do
 
@@ -58,15 +61,13 @@ describe GTools do
   describe :site_index do
 
     it "should return an integer for a valid domain" do
-      sleep sleep_amount
-      index = GTools.site_index 'google.com'
+      index = GTools.site_index 'google.com', '50.19.85.156'
       index.should_not be_nil
       index.should_not == 0
     end
 
-    it "should return nil for invalid domain" do
-      sleep sleep_amount
-      index = GTools.site_index 'test'
+    it "should return nil for invalid url" do
+      index = GTools.site_index '@#$%', '50.19.85.156'
       index.should be_nil
     end
 
@@ -75,15 +76,13 @@ describe GTools do
   describe :site_links do
 
     it "should return an integer for a valid domain" do
-      sleep sleep_amount
-      count = GTools.site_links 'google.com'
+      count = GTools.site_links 'google.com', '50.18.169.106'
       count.should_not be_nil
       count.should_not == 0
     end
 
-    it "should return nil for invalid domain" do
-      sleep sleep_amount
-      count = GTools.site_links 'test'
+    it "should return nil for invalid url" do
+      count = GTools.site_links '@#$%', '50.18.169.106'
       count.should be_nil
     end
 
@@ -91,18 +90,18 @@ describe GTools do
 
   describe :search_results do
 
-    it "should return an integer for a valid domain" do
-      sleep sleep_amount
+    it "should return an integer for a valid query" do
+      count = GTools.search_results 'lolcat', '199.59.148.82'
+      count.should_not be_nil
+      count.should_not == 0
+    end
+
+    it "should work without providing IP" do
       count = GTools.search_results 'google.com'
       count.should_not be_nil
       count.should_not == 0
     end
 
-    it "should return nil for invalid domain" do
-      sleep sleep_amount
-      count = GTools.search_results 'test'
-      count.should be_nil
-    end
   end
 
   describe :suggested_tld do

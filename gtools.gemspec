@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["kamil@futureworkshops.com"]
   spec.description   = %{A set of Gooogle SEO tools in Ruby}
   spec.summary       = %q{Gathers statistics like PageRank, site index, page speed analysis and more.}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/kkodev/gtools"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
